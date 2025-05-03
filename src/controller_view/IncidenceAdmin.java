@@ -5,6 +5,7 @@
 package controller_view;
 
 import java.util.ArrayList;
+import javax.swing.DefaultListModel;
 import model.Incidence;
 import static model.Incidence.STATUS_PENDING;
 import static model.Incidence.STATUS_SOLVED;
@@ -17,13 +18,24 @@ import persistencia.IncidenceDB;
  */
 public class IncidenceAdmin extends javax.swing.JFrame {
 
+    private ArrayList<Incidence> incidences;
+
+    public ArrayList<Incidence> getIncidences() {
+        return incidences;
+    }
+
+    public void setIncidences(ArrayList<Incidence> incidences) {
+        this.incidences = incidences;
+    }
+
     /**
      * Creates new form IncidenceAdmin
      */
     public IncidenceAdmin() {
         initComponents();
         jComboBoxIncidences.removeAllItems();
-        for(int i = 0; i < 3; i++) {
+
+        for (int i = 0; i < 3; i++) {
             switch (i) {
                 case STATUS_UNSOLVED:
                     jComboBoxIncidences.addItem("Sen resolver");
@@ -38,6 +50,10 @@ public class IncidenceAdmin extends javax.swing.JFrame {
                     break;
             }
         }
+
+        this.incidences = IncidenceDB.findByStatus(jComboBoxIncidences.getSelectedIndex());
+
+        loadIncidences();
     }
 
     /**
@@ -55,17 +71,22 @@ public class IncidenceAdmin extends javax.swing.JFrame {
         jScrollPane1 = new javax.swing.JScrollPane();
         jListIncidences = new javax.swing.JList<>();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
         jLabel1.setText("Listado de incidencias:");
 
         jComboBoxIncidences.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        jComboBoxIncidences.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                jComboBoxIncidencesMouseClicked(evt);
+        jComboBoxIncidences.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jComboBoxIncidencesActionPerformed(evt);
             }
         });
 
+        jListIncidences.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jListIncidencesMouseClicked(evt);
+            }
+        });
         jScrollPane1.setViewportView(jListIncidences);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
@@ -114,12 +135,43 @@ public class IncidenceAdmin extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jComboBoxIncidencesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jComboBoxIncidencesMouseClicked
-        ArrayList<Incidence> myIncidences = IncidenceDB.findByStatus(jComboBoxIncidences.getSelectedIndex());
-        for(int i = 0; i < myIncidences.size(); i++) {
-            jListIncidences.add(myIncidences.get(i).getSender().getName() + " " + myIncidences.get(i).getSender().getSurname() + ": " + myIncidences.get(i).getDescription(), this);
+    private void jComboBoxIncidencesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxIncidencesActionPerformed
+        //Actualiza la lista de incidencias para luego volver a cargarlas en la lista
+        this.incidences = IncidenceDB.findByStatus(jComboBoxIncidences.getSelectedIndex());
+
+        loadIncidences();
+    }//GEN-LAST:event_jComboBoxIncidencesActionPerformed
+
+    private void jListIncidencesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jListIncidencesMouseClicked
+        //Doble click
+        if (evt.getClickCount() == 2 && !evt.isConsumed()) {
+            evt.consume();
         }
-    }//GEN-LAST:event_jComboBoxIncidencesMouseClicked
+
+        //Crea un Incidence que es el incidence selecionado en la lista
+        Incidence myincidence = incidences.get(jListIncidences.getSelectedIndex());
+
+        //Creo el myDialog, le mando la incidencia y la hago visible
+        IncidenceDialog myDialog = new IncidenceDialog(null, true, myincidence);
+        myDialog.setVisible(true);
+
+        //Actualizar cambios
+        loadIncidences();
+    }//GEN-LAST:event_jListIncidencesMouseClicked
+
+    /**
+     * Carga la lista de incidencias
+     */
+    private void loadIncidences() {
+        DefaultListModel<String> modelo = new DefaultListModel<>();
+
+        for (Incidence inc : incidences) {
+            String texto = inc.getSender().getName() + " " + inc.getSender().getSurname() + ": " + inc.getDescription();
+            modelo.addElement(texto);
+        }
+
+        jListIncidences.setModel(modelo);
+    }
 
     /**
      * @param args the command line arguments
