@@ -99,7 +99,7 @@ public class IncidenceAdmin extends javax.swing.JFrame {
                         .addContainerGap()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jComboBoxIncidences, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(jComboBoxIncidences, javax.swing.GroupLayout.PREFERRED_SIZE, 135, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 801, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -144,19 +144,27 @@ public class IncidenceAdmin extends javax.swing.JFrame {
 
     private void jListIncidencesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jListIncidencesMouseClicked
         //Doble click
-        if (evt.getClickCount() == 2 && !evt.isConsumed()) {
-            evt.consume();
+        if (evt.getClickCount() == 2) {
+
+            int index = jListIncidences.getSelectedIndex();
+            if (index != -1) {
+                Incidence myincidence = incidences.get(index);
+                IncidenceDialog myDialog = new IncidenceDialog(this, true, myincidence);
+                myDialog.setVisible(true);
+                
+                //Si se acepta, guarda establece las variables a esa incidencia
+                if(myDialog.isAccepted()) {
+                    Incidence updated = myDialog.getIncidence();
+                    incidences.set(index, updated);
+                    
+                    //Garda a incidencia actualizada na base de datos
+                    IncidenceDB.update(updated);
+                }
+
+                // Actualizar cambios después de cerrar el diálogo
+                loadIncidences();
+            }
         }
-
-        //Crea un Incidence que es el incidence selecionado en la lista
-        Incidence myincidence = incidences.get(jListIncidences.getSelectedIndex());
-
-        //Creo el myDialog, le mando la incidencia y la hago visible
-        IncidenceDialog myDialog = new IncidenceDialog(null, true, myincidence);
-        myDialog.setVisible(true);
-
-        //Actualizar cambios
-        loadIncidences();
     }//GEN-LAST:event_jListIncidencesMouseClicked
 
     /**
